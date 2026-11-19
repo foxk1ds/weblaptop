@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# weblaptop executable wrapper
+set -e
+
+# Resolve the real directory of this script, even through symlinks
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+REPO_ROOT="$( cd -P "$BIN_DIR/.." >/dev/null 2>&1 && pwd )"
+
+# Detect python executable (prefer local virtualenv)
+if [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+    PYTHON_EXEC="$REPO_ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_EXEC="$(command -v python3)"
+else
+    echo "Error: Python 3 is not installed." >&2
+    exit 1
+fi
+
+export PYTHONPATH="$REPO_ROOT:${PYTHONPATH:-}"
+exec "$PYTHON_EXEC" -m weblaptop.main "$@"
